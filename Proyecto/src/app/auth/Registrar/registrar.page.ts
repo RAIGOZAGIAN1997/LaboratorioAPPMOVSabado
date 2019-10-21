@@ -1,23 +1,83 @@
-import { Injectable } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RegistrarService } from './registrar.service';
 import { Usuario } from 'src/app/model/usuario';
-import { HttpService } from 'src/app/service/http-services';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { ModalController, AlertController } from '@ionic/angular';
+import { Router } from '@angular/router';
 
-@Injectable({
-  providedIn: 'root'
+
+@Component({
+  selector: 'app-registrar',
+  templateUrl: './registrar.page.html',
+  styleUrls: ['./registrar.page.scss']
 })
-export class RegistrarService extends HttpService<Usuario>{
+export class RegistrarPage implements OnInit {
+  registrarForm: FormGroup;
+  submitted = false;
+  usuario: Usuario;
+  constructor(private formBuilder: FormBuilder,
+              private registrarService: RegistrarService,
+              private alertController: AlertController,
+              private router: Router) {
 
-  constructor(protected http: HttpClient) {
-    super(http, Usuario.endPoint);
+              this.registrarForm = this.formBuilder.group({
+                nombre: ['', Validators.required],
+                correo: ['', [Validators.required, Validators.email]],
+                contrasena: ['', [Validators.required, Validators.minLength(6)]],
+                confirmacionContrasena: ['', Validators.required]
+                });
+ }
+
+  ngOnInit() {}
+
+  get f() { return this.registrarForm.controls; }
+
+  registrar() {
+    console.log(this.registrarForm.valid);
+    this.usuario = new Usuario();
+    this.usuario.nombre = this.registrarForm.controls.nombre.value;
+    this.usuario.correo = this.registrarForm.controls.correo.value;
+    this.usuario.contrasena = this.registrarForm.controls.contrasena.value;
+    this.usuario.confirmacionContrasena = this.registrarForm.controls.confirmacionContrasena.value;
+    this.registrarService.save(this.usuario).subscribe(
+      value => {
+        this.cuentaCreada();
+      },
+      error => {
+        this.error(error.error.mensaje)
+      }
+    );
   }
 
-  public getAll(): Observable<Usuario> {
-    return super.getAll();
+  async cuentaCreada() {
+    const alert = await this.alertController.create({
+      header: 'Alert',
+      subHeader: 'Bienveid@',
+      message: 'Cuenta registrada con exito',
+      buttons: [{
+        text: 'Aceptar',
+        handler: () => {
+          this.router.navigateByUrl('/login');
+        }
+      }]
+    });
+
+    await alert.present();
   }
 
-  public save(usuario: Usuario): Observable<Usuario>{
-    return super.save(usuario);
+  async error(error: string){
+    const alert = await this.alertController.create({
+      header: 'Alert',
+      subHeader: 'Error',
+      message: error,
+      buttons: [{
+        text: 'Aceptar',
+        handler: () => {
+          this.registrarForm.controls.correo.setErrors(Validators.email);
+        }
+      }]
+    });
+
+    await alert.present();
   }
 }

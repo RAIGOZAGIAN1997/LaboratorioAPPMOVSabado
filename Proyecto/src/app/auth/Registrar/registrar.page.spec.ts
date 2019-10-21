@@ -1,7 +1,7 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { RegistrarPage } from './register.page';
+import { RegistrarPage } from './registrar.page';
 
 describe('RegistrarPage', () => {
   let component: RegistrarPage;
